@@ -86,14 +86,19 @@ def error_diffusion(
     image: npt.NDArray[np.uint8],
     method: str = 'j',
 ) -> npt.NDArray[np.uint8]:
+    is_rgb = image.ndim == 3 and image.shape[2] == 3
 
-    h, w = image.shape
+    if not is_rgb:
+        image = image[..., np.newaxis]  # shape becomes (H, W, 1)
+
+    h, w, ch = image.shape
     image_float = image.astype(np.float32)
-    result_image = np.zeros_like(image)
+    result_image = np.zeros_like(image, dtype=np.uint8)
 
-    filter_pos = (0, 0)  # (row, col) anchor
+    filter_pos = (0, 0)
     weight = None
     inv_weight = None
+
     if method == 'fs' or method == 'Floyd-Steinberg':
         filter_pos = (0, 1)
         weight = np.array([[0, 0, 7], [3, 5, 1]], dtype=np.float64) / 16
@@ -110,33 +115,27 @@ def error_diffusion(
         raise NotImplementedError
 
     for r in range(h):
-        current_filter = None
-        col_positions = None
-
-        if r % 2 == 0:  # even row: ->
-            current_filter = weight
-            col_positions = range(w)
-        else:  # odd row: <-
-            current_filter = inv_weight
-            col_positions = range(w - 1, -1, -1)
+        current_filter = weight if r % 2 == 0 else inv_weight
+        col_positions = range(w) if r % 2 == 0 else range(w - 1, -1, -1)
 
         for c in col_positions:
-            old_pixel = image_float[r, c]
-            new_pixel = 255 if old_pixel > 127 else 0
-            result_image[r, c] = new_pixel
-            error = old_pixel - new_pixel
-            for dr in range(current_filter.shape[0]):
-                for dc in range(current_filter.shape[1]):
-                    nr, nc = r + dr - filter_pos[0], c + dc - filter_pos[1]
-                    if 0 <= nr < h and 0 <= nc < w:
-                        image_float[nr, nc] += error * current_filter[dr, dc]
+            for k in range(ch):
+                old_pixel = image_float[r, c, k]
+                new_pixel = 255 if old_pixel > 127 else 0
+                result_image[r, c, k] = new_pixel
+                error = old_pixel - new_pixel
+                for dr in range(current_filter.shape[0]):
+                    for dc in range(current_filter.shape[1]):
+                        nr, nc = r + dr - filter_pos[0], c + dc - filter_pos[1]
+                        if 0 <= nr < h and 0 <= nc < w:
+                            image_float[nr, nc, k] += error * current_filter[dr, dc]
 
-    return result_image
+    return result_image.squeeze()  # Remove channel if input was grayscale
 
 
 def replace_modules(
     qrcode_image: npt.NDArray[np.uint8],
-    qrcode_mask: npt.NDArray[np.uint8],
+    qrcode_mask: npt.NDArray[bool],
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,
     drop_prob: float = 0.0,
@@ -179,6 +178,49 @@ def replace_modules(
     return styled_qrcode_image
 
 
+def replace_modules_color(
+    qrcode_image: npt.NDArray[np.uint8],  # H, W
+    qrcode_mask: npt.NDArray[bool],  # H, W
+    module_size: int = 3,
+    insert_image: t.Optional[npt.NDArray[np.uint8]] = None,  # H, W, C
+    drop_prob: float = 0.0,
+) -> npt.NDArray[np.uint8]:
+
+    if insert_image is None:
+        insert_image = np.full_like(qrcode_image, 255)  # default empty (white) insert image
+        insert_image = np.tile(insert_image[:, :, np.newaxis], 3)
+
+    h, w = qrcode_image.shape
+    module_num = h // module_size
+    styled_qrcode_image = np.full_like(insert_image, 255)
+    drop_cnt = 0
+
+    for r in range(module_num):
+        for c in range(module_num):
+            if qrcode_mask[r, c] == 0:
+                # immutable: preserve the entire module
+                styled_qrcode_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size, :] = \
+                    qrcode_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size, np.newaxis]  # noqa
+            else:
+                # mutable: only preserve the middle pixel in the module
+                # obtain the center value of source qrcode
+                center_value = qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2]
+
+                # replace entire module with the insert image
+                styled_qrcode_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size] = \
+                    insert_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size]
+
+                # fill the center value of source qrcode
+                rnd = random.random()
+                if rnd < drop_prob:
+                    drop_cnt += 1
+                    continue
+                styled_qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2, :] = center_value  # noqa
+
+    print(f'Drop {drop_cnt} values')
+    return styled_qrcode_image
+
+
 def write_image(
     image_path: str,
     image: npt.NDArray[np.uint8],
@@ -202,3 +244,20 @@ def is_consistant(
                     if qrcode_image[r * module_size + mr, c * module_size + mc] != color:
                         consistant = False
     return consistant
+
+
+def pad_image(image: npt.NDArray[np.uint8], pad_size: int = 5) -> npt.NDArray[np.uint8]:
+    if pad_size == 0:
+        return image
+
+    pad_dim = ((pad_size, pad_size), (pad_size, pad_size))
+
+    if image.ndim == 3:
+        pad_dim = ((pad_size, pad_size), (pad_size, pad_size), (0, 0))
+
+    return np.pad(
+        image,
+        pad_width=pad_dim,
+        mode='constant',
+        constant_values=255
+    )
