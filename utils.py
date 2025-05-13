@@ -1,3 +1,4 @@
+import random
 import typing as t
 
 import cv2
@@ -138,6 +139,7 @@ def replace_modules(
     qrcode_mask: npt.NDArray[np.uint8],
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,
+    drop_prob: float = 0.0,
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -146,6 +148,7 @@ def replace_modules(
     h, w = qrcode_image.shape
     module_num = h // module_size
     styled_qrcode_image = np.full_like(qrcode_image, 255)
+    drop_cnt = 0
 
     for r in range(module_num):
         for c in range(module_num):
@@ -157,14 +160,22 @@ def replace_modules(
                 # mutable: only preserve the middle pixel in the module
                 # obtain the center value of source qrcode
                 center_value = qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2]
+                center_value_on_insert_image = insert_image[r * module_size + module_size // 2, c * module_size + module_size // 2]  # noqa
+                the_same = center_value == center_value_on_insert_image
 
                 # replace entire module with the insert image
                 styled_qrcode_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size] = \
                     insert_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size]
 
-                # fill the center value of source qrcode
-                styled_qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2] = center_value  # noqa
-
+                # fill the center value of source qrcode if not the same
+                # with drop_prob, some of them will not be replaced
+                if not the_same:
+                    rnd = random.random()
+                    if rnd < drop_prob:
+                        drop_cnt += 1
+                        continue
+                    styled_qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2] = center_value  # noqa
+    print(f'Drop {drop_cnt} values')
     return styled_qrcode_image
 
 
