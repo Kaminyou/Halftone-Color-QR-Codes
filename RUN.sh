@@ -1,3 +1,3 @@
 # DIP Final
 # Team #: 5
-python final.py
+python main.py --meta
