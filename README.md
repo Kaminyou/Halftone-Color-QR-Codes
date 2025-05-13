@@ -3,5 +3,7 @@ DIP Final Project
 
 ## Usage
 ```sh
-$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/sample1.png' -o 'output/stylized_qrcode.png' --meta
+# -v: version
+# -b: box_size
+$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/sample1.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 3
 ```
