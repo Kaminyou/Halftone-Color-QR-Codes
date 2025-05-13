@@ -4,7 +4,7 @@ import cv2
 
 from utils import (error_diffusion, generate_clean_qrcode,
                    generate_qrcode_mask, is_consistant, replace_modules,
-                   write_image)
+                   write_image, replace_modules_color, pad_image)
 
 
 def argument():
@@ -56,6 +56,17 @@ def argument():
         action='store_true',
         help='Whether to save meta data or not',
     )
+    parser.add_argument(
+        '--color',
+        action='store_true',
+        help='Whether use RGB image',
+    )
+    parser.add_argument(
+        '--pad-size',
+        type=int,
+        default=5,
+        help='Pad the output QRCode.',
+    )
     args = parser.parse_args()
     return args
 
@@ -82,16 +93,24 @@ def main():
     if args.meta:
         write_image('output/simplified_qrcode.png', simplified_qrcode)
 
-    style_image = cv2.imread(args.input, cv2.IMREAD_GRAYSCALE)
+    replace_modules_func = None
+    if args.color:
+        replace_modules_func = replace_modules_color
+        style_image = cv2.imread(args.input)[:, :, ::-1]
+    else:
+        replace_modules_func = replace_modules
+        style_image = cv2.imread(args.input, cv2.IMREAD_GRAYSCALE)
+
     style_image = cv2.resize(style_image, qrcode_image.shape)
     halftone_image = error_diffusion(style_image, method='j')
-    styled_qrcode = replace_modules(
+    styled_qrcode = replace_modules_func(
         qrcode_image,
         qrcode_mask,
         module_size=box_size,
         insert_image=halftone_image,
         drop_prob=args.drop_prob,
     )
+    styled_qrcode = pad_image(styled_qrcode, pad_size=args.pad_size)
     write_image(args.output, styled_qrcode)
 
 
