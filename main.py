@@ -45,6 +45,13 @@ def argument():
         help='QRCode module box size',
     )
     parser.add_argument(
+        '-d',
+        '--drop-prob',
+        type=float,
+        default=0.0,
+        help='Dropping value prob.',
+    )
+    parser.add_argument(
         '--meta',
         action='store_true',
         help='Whether to save meta data or not',
@@ -78,7 +85,13 @@ def main():
     style_image = cv2.imread(args.input, cv2.IMREAD_GRAYSCALE)
     style_image = cv2.resize(style_image, qrcode_image.shape)
     halftone_image = error_diffusion(style_image, method='j')
-    styled_qrcode = replace_modules(qrcode_image, qrcode_mask, module_size=box_size, insert_image=halftone_image)
+    styled_qrcode = replace_modules(
+        qrcode_image,
+        qrcode_mask,
+        module_size=box_size,
+        insert_image=halftone_image,
+        drop_prob=args.drop_prob,
+    )
     write_image(args.output, styled_qrcode)
 
 
