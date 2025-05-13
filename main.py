@@ -31,6 +31,20 @@ def argument():
         help='Output styled qrcode path',
     )
     parser.add_argument(
+        '-v',
+        '--version',
+        type=int,
+        default=6,
+        help='QRCode version',
+    )
+    parser.add_argument(
+        '-b',
+        '--box-size',
+        type=int,
+        default=3,
+        help='QRCode module box size',
+    )
+    parser.add_argument(
         '--meta',
         action='store_true',
         help='Whether to save meta data or not',
@@ -41,24 +55,30 @@ def argument():
 
 def main():
     args = argument()
+    version = args.version
+    box_size = args.box_size
 
-    qrcode = generate_clean_qrcode(args.text, version=6, box_size=3)  # 123x123: (3x41)
+    qrcode_image = generate_clean_qrcode(args.text, version=version, box_size=box_size)
+    print(f'Generate QRCode with version: {version} and box size: {box_size}')
+    print(f'Output QRcode has a shape of {qrcode_image.shape[0]}x{qrcode_image.shape[1]}')
+
     if args.meta:
-        write_image('output/clean_qrcode.png', qrcode)
+        write_image('output/clean_qrcode.png', qrcode_image)
 
-    if not is_consistant(qrcode, module_num=41, module_size=3):
+    module_num = qrcode_image.shape[0] // box_size
+    if not is_consistant(qrcode_image, module_num=module_num, module_size=box_size):
         raise ValueError('QR code is not valid')
 
-    qrcode_mask = generate_qrcode_mask(version=6)
+    qrcode_mask = generate_qrcode_mask(version=version)
 
-    simplified_qrcode = replace_modules(qrcode, qrcode_mask, module_size=3)
+    simplified_qrcode = replace_modules(qrcode_image, qrcode_mask, module_size=box_size)
     if args.meta:
         write_image('output/simplified_qrcode.png', simplified_qrcode)
 
     style_image = cv2.imread(args.input, cv2.IMREAD_GRAYSCALE)
-    style_image = cv2.resize(style_image, qrcode.shape)
+    style_image = cv2.resize(style_image, qrcode_image.shape)
     halftone_image = error_diffusion(style_image, method='j')
-    styled_qrcode = replace_modules(qrcode, qrcode_mask, module_size=3, insert_image=halftone_image)
+    styled_qrcode = replace_modules(qrcode_image, qrcode_mask, module_size=box_size, insert_image=halftone_image)
     write_image(args.output, styled_qrcode)
 
 

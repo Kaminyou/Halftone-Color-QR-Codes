@@ -178,16 +178,16 @@ def write_image(
 
 
 def is_consistant(
-    qrcode: npt.NDArray[np.uint8],
+    qrcode_image: npt.NDArray[np.uint8],
     module_num: int,
     module_size: int,
 ) -> bool:
     consistant = True
     for r in range(module_num):
         for c in range(module_num):
-            color = qrcode[r * module_size, c * module_size]
+            color = qrcode_image[r * module_size, c * module_size]
             for mr in range(module_size):
                 for mc in range(module_size):
-                    if qrcode[r * 3 + mr, c * 3 + mc] != color:
+                    if qrcode_image[r * module_size + mr, c * module_size + mc] != color:
                         consistant = False
     return consistant
