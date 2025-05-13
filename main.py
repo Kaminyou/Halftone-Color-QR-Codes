@@ -2,10 +2,9 @@ import argparse
 
 import cv2
 
-from utils import (error_diffusion, generate_clean_qrcode,
-                   generate_qrcode_mask, is_consistant, replace_modules,
-                   write_image, replace_modules_color, pad_image, 
-                   edgeDetector)
+from utils import (edge_detector, error_diffusion, generate_clean_qrcode,
+                   generate_qrcode_mask, is_consistant, pad_image,
+                   replace_modules, replace_modules_color, write_image)
 
 
 def argument():
@@ -109,7 +108,11 @@ def main():
         style_image = cv2.imread(args.input, cv2.IMREAD_GRAYSCALE)
 
     style_image = cv2.resize(style_image, qrcode_image.shape)
-    edgeImg = edgeDetector(style_image)
+
+    edge_mask = None
+    if args.edge_enhance:
+        edge_mask = edge_detector(style_image)
+
     halftone_image = error_diffusion(style_image, method='j')
     styled_qrcode = replace_modules_func(
         qrcode_image,
@@ -117,7 +120,7 @@ def main():
         module_size=box_size,
         insert_image=halftone_image,
         drop_prob=args.drop_prob,
-        edge_mask=edgeImg,
+        edge_mask=edge_mask,
     )
     styled_qrcode = pad_image(styled_qrcode, pad_size=args.pad_size)
     write_image(args.output, styled_qrcode)
