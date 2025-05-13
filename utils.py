@@ -1,6 +1,7 @@
 import random
 import typing as t
 
+import math
 import cv2
 import numpy as np
 import numpy.typing as npt
@@ -135,10 +136,11 @@ def error_diffusion(
 
 def replace_modules(
     qrcode_image: npt.NDArray[np.uint8],
-    qrcode_mask: npt.NDArray[bool],
+    qrcode_mask: npt.NDArray[np.bool],
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,
     drop_prob: float = 0.0,
+    edge_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -148,6 +150,9 @@ def replace_modules(
     module_num = h // module_size
     styled_qrcode_image = np.full_like(qrcode_image, 255)
     drop_cnt = 0
+    
+    have_edge_mask = False
+    if edge_mask is not None: have_edge_mask = True
 
     for r in range(module_num):
         for c in range(module_num):
@@ -168,6 +173,11 @@ def replace_modules(
 
                 # fill the center value of source qrcode if not the same
                 # with drop_prob, some of them will not be replaced
+                if have_edge_mask:
+                    if edge_mask[r, c] == 1: # maintain the edge part
+                        drop_cnt += 1
+                        continue
+                    
                 if not the_same:
                     rnd = random.random()
                     if rnd < drop_prob:
@@ -180,10 +190,11 @@ def replace_modules(
 
 def replace_modules_color(
     qrcode_image: npt.NDArray[np.uint8],  # H, W
-    qrcode_mask: npt.NDArray[bool],  # H, W
+    qrcode_mask: npt.NDArray[np.bool],  # H, W
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,  # H, W, C
     drop_prob: float = 0.0,
+    edge_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -194,6 +205,9 @@ def replace_modules_color(
     module_num = h // module_size
     styled_qrcode_image = np.full_like(insert_image, 255)
     drop_cnt = 0
+
+    have_edge_mask = False
+    if edge_mask is not None: have_edge_mask = True
 
     for r in range(module_num):
         for c in range(module_num):
@@ -211,6 +225,11 @@ def replace_modules_color(
                     insert_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size]
 
                 # fill the center value of source qrcode
+                if have_edge_mask:
+                    if edge_mask[r, c] == 1: # maintain the edge part
+                        drop_cnt += 1
+                        continue
+                    
                 rnd = random.random()
                 if rnd < drop_prob:
                     drop_cnt += 1
@@ -261,3 +280,72 @@ def pad_image(image: npt.NDArray[np.uint8], pad_size: int = 5) -> npt.NDArray[np
         mode='constant',
         constant_values=255
     )
+
+
+def gradientOrientationImg(inputImg: npt.NDArray[np.uint8], K: int = 2) -> npt.NDArray[np.uint8]:#Sobel edge detection
+    # reflect padding with p=1
+    p=1
+    # use astype int32 to avoid overflow
+    paddedImg = np.pad(inputImg,1,'reflect').astype(np.int32)
+    inputRow, inputCol = inputImg.shape
+
+    gradientImg = inputImg.copy()
+    orientationImg = np.zeros(inputImg.shape, dtype=float)
+    for row in range(inputRow):
+        for col in range(inputCol):
+            #row gradient 1/(k+2)*[(A2+kA3+A4)-(A0+kA7+A6)]
+            rightCol = paddedImg[row-1+p, col+1+p] + K*paddedImg[row+p, col+1+p] +paddedImg[row+1+p, col+1+p]
+            leftCol = paddedImg[row-1+p, col-1+p] + K*paddedImg[row+p, col-1+p] +paddedImg[row+1+p, col-1+p]
+            G_R = 1.0/float(K+2) * float(rightCol - leftCol)
+
+            # col gradient 1/(k+2)*[(A6+kA5+A4)-(A0+kA1+A2)]
+            topRow = paddedImg[row-1+p, col-1+p] + K*paddedImg[row-1+p, col+p] +paddedImg[row-1+p, col+1+p]
+            bottomRow = paddedImg[row+1+p, col-1+p] + K*paddedImg[row+1+p, col+p] +paddedImg[row+1+p, col+1+p]
+            G_C = 1.0/float(K+2) * float(bottomRow - topRow)
+
+            gradientImg[row,col] =  math.sqrt((G_R ** 2) + (G_C ** 2))
+            orientationImg[row,col] = np.arctan2(G_C, G_R) * 180 / np.pi # this handle G_R=0, convert to degree
+    
+    return gradientImg, orientationImg
+
+
+def thresholding(gradImg: npt.NDArray[np.uint8]) -> npt.NDArray[np.bool]:
+    gradRow, gradCol = gradImg.shape
+    # find the threshold of top 5% large value
+    # Initialize histogram array with zeros (256 bins for 0-255 values)
+    histo = np.zeros(256, dtype=int)
+    for row in range(gradRow):
+        for col in range(gradCol):
+            histo[gradImg[row, col]] += 1
+    
+    cumulative_pixel = 0
+    total_pixel = gradRow * gradCol
+    for i in range(256):
+        cumulative_pixel += histo[i]
+        if cumulative_pixel > total_pixel*0.95: # find pixel value larger than 95% of gradImg
+            T = i
+            print(float(cumulative_pixel/total_pixel))
+            break          
+    
+    # use threshold to generate edge map
+    # there's not common for png that only have 0/1 binary img so we set 0/255
+    outputImg = np.zeros(gradImg.shape, dtype=bool)
+    for row in range(gradRow):
+        for col in range(gradCol):
+            if gradImg[row, col]>T: outputImg[row, col] = 1 # one for edge place
+            else: outputImg[row, col] = 0
+        
+    return outputImg
+
+
+def edgeDetector(inputImg: npt.NDArray[np.uint8]) -> npt.NDArray[np.bool]:
+    gradImg,_ = gradientOrientationImg(inputImg, K=2)
+    edgeImg = thresholding(gradImg)
+    '''printImg = inputImg.copy()
+    row,col = inputImg.shape
+    for r in range(row):
+        for c in range(col):
+            if edgeImg[r, c]==1: printImg[r, c] = 255 # one for edge place
+            else: printImg[r, c] = 0
+    cv2.imwrite("edge.png", printImg)'''
+    return edgeImg

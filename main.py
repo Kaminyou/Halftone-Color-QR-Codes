@@ -4,7 +4,8 @@ import cv2
 
 from utils import (error_diffusion, generate_clean_qrcode,
                    generate_qrcode_mask, is_consistant, replace_modules,
-                   write_image, replace_modules_color, pad_image)
+                   write_image, replace_modules_color, pad_image, 
+                   edgeDetector)
 
 
 def argument():
@@ -67,6 +68,12 @@ def argument():
         default=5,
         help='Pad the output QRCode.',
     )
+    parser.add_argument(
+        '--edge-enhance',
+        type=bool,
+        default=True,
+        help='Enhance edge.',
+    )
     args = parser.parse_args()
     return args
 
@@ -102,6 +109,7 @@ def main():
         style_image = cv2.imread(args.input, cv2.IMREAD_GRAYSCALE)
 
     style_image = cv2.resize(style_image, qrcode_image.shape)
+    edgeImg = edgeDetector(style_image)
     halftone_image = error_diffusion(style_image, method='j')
     styled_qrcode = replace_modules_func(
         qrcode_image,
@@ -109,6 +117,7 @@ def main():
         module_size=box_size,
         insert_image=halftone_image,
         drop_prob=args.drop_prob,
+        edge_mask=edgeImg,
     )
     styled_qrcode = pad_image(styled_qrcode, pad_size=args.pad_size)
     write_image(args.output, styled_qrcode)
