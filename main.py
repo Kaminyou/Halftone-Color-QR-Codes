@@ -69,8 +69,7 @@ def argument():
     )
     parser.add_argument(
         '--edge-enhance',
-        type=bool,
-        default=True,
+        action='store_true',
         help='Enhance edge.',
     )
     args = parser.parse_args()

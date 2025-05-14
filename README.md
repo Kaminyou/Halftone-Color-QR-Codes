@@ -47,6 +47,10 @@ Arguments:
     --color (flag): 
         If set, enables RGB mode (stylization with color image).
         Default: False (grayscale)
+    
+    --edge-enhance (flag): 
+        If set, edges will be detected for module region keeping
+        Default: False (disabled)
 
     --pad-size (int): 
         Padding (in pixels) to apply around the final output QR code.

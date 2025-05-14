@@ -149,11 +149,36 @@ def replace_modules(
     h, w = qrcode_image.shape
     module_num = h // module_size
     styled_qrcode_image = np.full_like(qrcode_image, 255)
-    drop_cnt = 0
 
-    have_edge_mask = False
-    if edge_mask is not None:
-        have_edge_mask = True
+    # collect position for replacing
+    normal_candidates = []
+    salient_candidates = []
+    block_num = 0
+    for r in range(module_num):
+        for c in range(module_num):
+            if qrcode_mask[r, c]:  # mutable
+                block_num += 1
+                center_value = qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2]
+                center_value_on_insert_image = insert_image[r * module_size + module_size // 2, c * module_size + module_size // 2]  # noqa
+                the_same = center_value == center_value_on_insert_image
+                if not the_same:  # it should be changed
+                    if edge_mask is not None and edge_mask[r * module_size + module_size // 2][c * module_size + module_size // 2]:  # noqa # it is in a salient region
+                        salient_candidates.append((r, c))
+                    else:
+                        normal_candidates.append((r, c))
+
+    # now salient_candidates is a subset of candidates
+    # calculate how many module blocks can be fully preserved for styled image
+    keep_num = int(block_num * drop_prob)
+    keep_positions = []
+    # sample from salient_candidates first
+    salient_candidates_keep_num = min(len(salient_candidates), keep_num)
+    keep_positions += random.sample(salient_candidates, salient_candidates_keep_num)
+    # sample from candidates
+    normal_candidates_keep_num = min(len(normal_candidates), keep_num - salient_candidates_keep_num)
+    keep_positions += random.sample(normal_candidates, normal_candidates_keep_num)
+
+    keep_positions = set(keep_positions)
 
     for r in range(module_num):
         for c in range(module_num):
@@ -173,19 +198,12 @@ def replace_modules(
                     insert_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size]
 
                 # fill the center value of source qrcode if not the same
-                # with drop_prob, some of them will not be replaced
-                if have_edge_mask:
-                    if edge_mask[r, c] == 1:  # maintain the edge part
-                        drop_cnt += 1
-                        continue
+                # if (r, c) in keep_positions, we would not change it
+                if (r, c) in keep_positions:
+                    continue
+                styled_qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2] = center_value  # noqa
 
-                if not the_same:
-                    rnd = random.random()
-                    if rnd < drop_prob:
-                        drop_cnt += 1
-                        continue
-                    styled_qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2] = center_value  # noqa
-    print(f'Drop {drop_cnt} values')
+    print(f'Drop {len(keep_positions)} values (salient: {salient_candidates_keep_num}); Total {block_num} values')
     return styled_qrcode_image
 
 
@@ -205,11 +223,32 @@ def replace_modules_color(
     h, w = qrcode_image.shape
     module_num = h // module_size
     styled_qrcode_image = np.full_like(insert_image, 255)
-    drop_cnt = 0
 
-    have_edge_mask = False
-    if edge_mask is not None:
-        have_edge_mask = True
+    # collect position for replacing
+    normal_candidates = []
+    salient_candidates = []
+    block_num = 0
+    for r in range(module_num):
+        for c in range(module_num):
+            if qrcode_mask[r, c]:  # mutable
+                block_num += 1
+                if edge_mask is not None and edge_mask[r * module_size + module_size // 2][c * module_size + module_size // 2]:  # noqa # it is in a salient region
+                    salient_candidates.append((r, c))
+                else:
+                    normal_candidates.append((r, c))
+
+    # now salient_candidates is a subset of candidates
+    # calculate how many module blocks can be fully preserved for styled image
+    keep_num = int(block_num * drop_prob)
+    keep_positions = []
+    # sample from salient_candidates first
+    salient_candidates_keep_num = min(len(salient_candidates), keep_num)
+    keep_positions += random.sample(salient_candidates, salient_candidates_keep_num)
+    # sample from candidates
+    normal_candidates_keep_num = min(len(normal_candidates), keep_num - salient_candidates_keep_num)
+    keep_positions += random.sample(normal_candidates, normal_candidates_keep_num)
+
+    keep_positions = set(keep_positions)
 
     for r in range(module_num):
         for c in range(module_num):
@@ -226,19 +265,13 @@ def replace_modules_color(
                 styled_qrcode_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size] = \
                     insert_image[r * module_size:(r + 1) * module_size, c * module_size:(c + 1) * module_size]
 
-                # fill the center value of source qrcode
-                if have_edge_mask:
-                    if edge_mask[r, c] == 1:  # maintain the edge part
-                        drop_cnt += 1
-                        continue
-
-                rnd = random.random()
-                if rnd < drop_prob:
-                    drop_cnt += 1
+                # fill the center value of source qrcode if not the same
+                # if (r, c) in keep_positions, we would not change it
+                if (r, c) in keep_positions:
                     continue
                 styled_qrcode_image[r * module_size + module_size // 2, c * module_size + module_size // 2, :] = center_value  # noqa
 
-    print(f'Drop {drop_cnt} values')
+    print(f'Drop {len(keep_positions)} values (salient: {salient_candidates_keep_num}); Total {block_num} values')
     return styled_qrcode_image
 
 
@@ -350,6 +383,8 @@ def thresholding(
 def edge_detector(
     image: npt.NDArray[np.uint8],
 ) -> npt.NDArray[np.bool]:
+    if image.ndim == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     grad_image, _ = gradient_orientation_image(image, K=2)
     edge_image = thresholding(grad_image)
     return edge_image
