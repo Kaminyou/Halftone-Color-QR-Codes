@@ -69,8 +69,7 @@ def argument():
     )
     parser.add_argument(
         '--edge-enhance',
-        type=bool,
-        default=True,
+        action='store_true',
         help='Enhance edge.',
     )
     args = parser.parse_args()
@@ -109,9 +108,9 @@ def main():
 
     style_image = cv2.resize(style_image, qrcode_image.shape)
 
-    edge_mask = None
+    salient_mask = None
     if args.edge_enhance:
-        edge_mask = edge_detector(style_image)
+        salient_mask = edge_detector(style_image)
 
     halftone_image = error_diffusion(style_image, method='j')
     styled_qrcode = replace_modules_func(
@@ -120,7 +119,7 @@ def main():
         module_size=box_size,
         insert_image=halftone_image,
         drop_prob=args.drop_prob,
-        edge_mask=edge_mask,
+        salient_mask=salient_mask,
     )
     styled_qrcode = pad_image(styled_qrcode, pad_size=args.pad_size)
     write_image(args.output, styled_qrcode)
