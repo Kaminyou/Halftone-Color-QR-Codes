@@ -140,7 +140,7 @@ def replace_modules(
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,
     drop_prob: float = 0.0,
-    edge_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
+    salient_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -162,7 +162,7 @@ def replace_modules(
                 center_value_on_insert_image = insert_image[r * module_size + module_size // 2, c * module_size + module_size // 2]  # noqa
                 the_same = center_value == center_value_on_insert_image
                 if not the_same:  # it should be changed
-                    if edge_mask is not None and edge_mask[r * module_size + module_size // 2][c * module_size + module_size // 2]:  # noqa # it is in a salient region
+                    if salient_mask is not None and salient_mask[r * module_size + module_size // 2][c * module_size + module_size // 2]:  # noqa # it is in a salient region
                         salient_candidates.append((r, c))
                     else:
                         normal_candidates.append((r, c))
@@ -213,7 +213,7 @@ def replace_modules_color(
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,  # H, W, C
     drop_prob: float = 0.0,
-    edge_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
+    salient_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -232,7 +232,7 @@ def replace_modules_color(
         for c in range(module_num):
             if qrcode_mask[r, c]:  # mutable
                 block_num += 1
-                if edge_mask is not None and edge_mask[r * module_size + module_size // 2][c * module_size + module_size // 2]:  # noqa # it is in a salient region
+                if salient_mask is not None and salient_mask[r * module_size + module_size // 2][c * module_size + module_size // 2]:  # noqa # it is in a salient region
                     salient_candidates.append((r, c))
                 else:
                     normal_candidates.append((r, c))
