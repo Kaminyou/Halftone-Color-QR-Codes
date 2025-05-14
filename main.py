@@ -31,6 +31,18 @@ def argument():
         help='Output styled qrcode path',
     )
     parser.add_argument(
+        '--meta-output-clean',
+        type=str,
+        default='output/clean_qrcode.png',
+        help='Output clean qrcode path',
+    )
+    parser.add_argument(
+        '--meta-output-simplified',
+        type=str,
+        default='output/simplified_qrcode.png',
+        help='Output simplified qrcode path',
+    )
+    parser.add_argument(
         '-v',
         '--version',
         type=int,
@@ -86,7 +98,7 @@ def main():
     print(f'Output QRcode has a shape of {qrcode_image.shape[0]}x{qrcode_image.shape[1]}')
 
     if args.meta:
-        write_image('output/clean_qrcode.png', qrcode_image)
+        write_image(args.meta_output_clean, qrcode_image)
 
     module_num = qrcode_image.shape[0] // box_size
     if not is_consistant(qrcode_image, module_num=module_num, module_size=box_size):
@@ -96,7 +108,7 @@ def main():
 
     simplified_qrcode = replace_modules(qrcode_image, qrcode_mask, module_size=box_size)
     if args.meta:
-        write_image('output/simplified_qrcode.png', simplified_qrcode)
+        write_image(args.meta_output_simplified, simplified_qrcode)
 
     replace_modules_func = None
     if args.color:
