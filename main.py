@@ -20,7 +20,7 @@ def argument():
         '-i',
         '--input',
         type=str,
-        default='input/sample1.png',
+        default='input/gray_dog.png',
         help='Input style image path',
     )
     parser.add_argument(
