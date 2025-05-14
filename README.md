@@ -4,9 +4,9 @@ DIP Final Project
 ## Usage
 ```sh
 # gray example
-$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/sample1.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 3
+$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/gray_dog.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 3
 # color example
-$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/sample1.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 5 --color
+$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/gray_dog.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 5 --color
 ```
 
 ## Details
