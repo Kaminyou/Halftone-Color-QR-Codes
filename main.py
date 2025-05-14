@@ -46,10 +46,10 @@ def argument():
     )
     parser.add_argument(
         '-d',
-        '--drop-prob',
+        '--drop-ratio',
         type=float,
         default=0.0,
-        help='Dropping value prob.',
+        help='Dropping ratio.',
     )
     parser.add_argument(
         '--meta',
@@ -118,7 +118,7 @@ def main():
         qrcode_mask,
         module_size=box_size,
         insert_image=halftone_image,
-        drop_prob=args.drop_prob,
+        drop_ratio=args.drop_ratio,
         salient_mask=salient_mask,
     )
     styled_qrcode = pad_image(styled_qrcode, pad_size=args.pad_size)

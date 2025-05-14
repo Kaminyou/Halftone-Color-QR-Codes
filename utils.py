@@ -139,7 +139,7 @@ def replace_modules(
     qrcode_mask: npt.NDArray[np.bool],
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,
-    drop_prob: float = 0.0,
+    drop_ratio: float = 0.0,
     salient_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
@@ -169,7 +169,7 @@ def replace_modules(
 
     # now salient_candidates is a subset of candidates
     # calculate how many module blocks can be fully preserved for styled image
-    keep_num = int(block_num * drop_prob)
+    keep_num = int(block_num * drop_ratio)
     keep_positions = []
     # sample from salient_candidates first
     salient_candidates_keep_num = min(len(salient_candidates), keep_num)
@@ -212,7 +212,7 @@ def replace_modules_color(
     qrcode_mask: npt.NDArray[np.bool],  # H, W
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,  # H, W, C
-    drop_prob: float = 0.0,
+    drop_ratio: float = 0.0,
     salient_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
@@ -239,7 +239,7 @@ def replace_modules_color(
 
     # now salient_candidates is a subset of candidates
     # calculate how many module blocks can be fully preserved for styled image
-    keep_num = int(block_num * drop_prob)
+    keep_num = int(block_num * drop_ratio)
     keep_positions = []
     # sample from salient_candidates first
     salient_candidates_keep_num = min(len(salient_candidates), keep_num)

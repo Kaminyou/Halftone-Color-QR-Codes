@@ -35,8 +35,8 @@ Arguments:
         Size (in pixels) of each QR code module (box).
         Default: 3
 
-    -d, --drop-prob (float): 
-        Probability (0.0–1.0) of randomly dropping a QR code module 
+    -d, --drop-ratio (float): 
+        Ratio (0.0–1.0) of randomly dropping a QR code module 
         for stylization or artistic effect.
         Default: 0.0
 
