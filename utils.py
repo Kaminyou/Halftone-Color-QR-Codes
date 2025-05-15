@@ -136,11 +136,11 @@ def error_diffusion(
 
 def replace_modules(
     qrcode_image: npt.NDArray[np.uint8],
-    qrcode_mask: npt.NDArray[np.bool],
+    qrcode_mask: npt.NDArray[bool],
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,
     drop_ratio: float = 0.0,
-    salient_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
+    salient_mask: t.Optional[npt.NDArray[bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -209,11 +209,11 @@ def replace_modules(
 
 def replace_modules_color(
     qrcode_image: npt.NDArray[np.uint8],  # H, W
-    qrcode_mask: npt.NDArray[np.bool],  # H, W
+    qrcode_mask: npt.NDArray[bool],  # H, W
     module_size: int = 3,
     insert_image: t.Optional[npt.NDArray[np.uint8]] = None,  # H, W, C
     drop_ratio: float = 0.0,
-    salient_mask: t.Optional[npt.NDArray[np.bool]] = None,  # H, W
+    salient_mask: t.Optional[npt.NDArray[bool]] = None,  # H, W
 ) -> npt.NDArray[np.uint8]:
 
     if insert_image is None:
@@ -349,7 +349,7 @@ def gradient_orientation_image(
 
 def thresholding(
     grad_image: npt.NDArray[np.uint8],
-) -> npt.NDArray[np.bool]:
+) -> npt.NDArray[bool]:
     h, w = grad_image.shape
     # find the threshold of top 5% large value
     # Initialize histogram array with zeros (256 bins for 0-255 values)
@@ -382,7 +382,7 @@ def thresholding(
 
 def edge_detector(
     image: npt.NDArray[np.uint8],
-) -> npt.NDArray[np.bool]:
+) -> npt.NDArray[bool]:
     if image.ndim == 3:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     grad_image, _ = gradient_orientation_image(image, K=2)
