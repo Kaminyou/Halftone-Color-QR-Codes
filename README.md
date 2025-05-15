@@ -49,8 +49,12 @@ Arguments:
         Default: False (grayscale)
     
     --edge-enhance (flag): 
-        If set, edges will be detected for module region keeping
+        If set, edges will be detected for module region keeping.
         Default: False (disabled)
+
+    --wo-halftone (flag): 
+        If set, our function will turn off the halftoning process.
+        Default: False (Do halftoning)
 
     --pad-size (int): 
         Padding (in pixels) to apply around the final output QR code.

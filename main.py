@@ -84,6 +84,11 @@ def argument():
         action='store_true',
         help='Enhance edge.',
     )
+    parser.add_argument(
+        '--wo-halftone',
+        action='store_true',
+        help='Turn off the halftoning, just use the origin picture.'
+    )
     args = parser.parse_args()
     return args
 
@@ -124,12 +129,15 @@ def main():
     if args.edge_enhance:
         salient_mask = edge_detector(style_image)
 
-    halftone_image = error_diffusion(style_image, method='j')
+    if args.wo_halftone:
+        insert_image = style_image
+    else:
+        insert_image = error_diffusion(style_image, method='j')
     styled_qrcode = replace_modules_func(
         qrcode_image,
         qrcode_mask,
         module_size=box_size,
-        insert_image=halftone_image,
+        insert_image=insert_image,
         drop_ratio=args.drop_ratio,
         salient_mask=salient_mask,
     )
