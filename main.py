@@ -89,6 +89,13 @@ def argument():
         action='store_true',
         help='Turn off the halftoning, just use the origin picture.'
     )
+    parser.add_argument(
+        '-e',
+        '--edge-ratio',
+        type=float,
+        default=0.1,
+        help='Edge ratio, which is proportion of pixel in input picture that would be edge',
+    )
     args = parser.parse_args()
     return args
 
@@ -127,7 +134,7 @@ def main():
 
     salient_mask = None
     if args.edge_enhance:
-        salient_mask = edge_detector(style_image)
+        salient_mask = edge_detector(style_image, args.edge_ratio)
 
     if args.wo_halftone:
         insert_image = style_image

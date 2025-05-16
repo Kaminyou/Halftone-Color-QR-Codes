@@ -349,9 +349,10 @@ def gradient_orientation_image(
 
 def thresholding(
     grad_image: npt.NDArray[np.uint8],
+    edge_ratio: float = 0.1,
 ) -> npt.NDArray[bool]:
     h, w = grad_image.shape
-    # find the threshold of top 5% large value
+    # find the threshold of top edge_ratio large value
     # Initialize histogram array with zeros (256 bins for 0-255 values)
     histo = np.zeros(256, dtype=int)
     for row in range(h):
@@ -362,7 +363,7 @@ def thresholding(
     total_pixel = h * w
     for i in range(256):
         cumulative_pixel += histo[i]
-        if cumulative_pixel > total_pixel * 0.95:  # find pixel value larger than 95% of gradImg
+        if cumulative_pixel > total_pixel * (1 - edge_ratio):  # find pixel value larger than 1-edge_ratio of gradImg
             T = i
             # print(float(cumulative_pixel / total_pixel))
             break
@@ -382,9 +383,10 @@ def thresholding(
 
 def edge_detector(
     image: npt.NDArray[np.uint8],
+    edge_ratio: float = 0.1,
 ) -> npt.NDArray[bool]:
     if image.ndim == 3:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     grad_image, _ = gradient_orientation_image(image, K=2)
-    edge_image = thresholding(grad_image)
+    edge_image = thresholding(grad_image, edge_ratio)
     return edge_image
