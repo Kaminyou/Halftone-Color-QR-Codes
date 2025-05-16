@@ -52,6 +52,10 @@ Arguments:
         If set, edges will be detected for module region keeping.
         Default: False (disabled)
 
+    -e, --edge-ratio(float): 
+        Ratio (0.0–1.0) of pixel of edge in the input image.
+        Default: 0.1
+
     --wo-halftone (flag): 
         If set, our function will turn off the halftoning process.
         Default: False (Do halftoning)
