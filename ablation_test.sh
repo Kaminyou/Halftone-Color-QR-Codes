@@ -87,7 +87,8 @@ for HALFTONE in "${HALFTONE_FLAGS[@]}"; do
                     -o "$OUTPUT_FILE" \
                     -v 6 \
                     -b "$BLOCK" \
-                    -d "$DROP_RATIO"
+                    -d "$DROP_RATIO" \
+                    --color
             else
                 python main.py \
                     -t "$TEXTS10" \
@@ -96,7 +97,8 @@ for HALFTONE in "${HALFTONE_FLAGS[@]}"; do
                     -v 6 \
                     -b "$BLOCK" \
                     -d "$DROP_RATIO" \
-                    --wo-halftone
+                    --wo-halftone \
+                    --color
             fi
         done
     done
