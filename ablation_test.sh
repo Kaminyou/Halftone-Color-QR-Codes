@@ -62,7 +62,8 @@ for HALFTONE in "${HALFTONE_FLAGS[@]}"; do
                     -o "$OUTPUT_FILE" \
                     -v 6 \
                     -b "$BLOCK" \
-                    -d "$DROP_RATIO"
+                    -d "$DROP_RATIO" \
+                    --edge-enhance
             else
                 python main.py \
                     -t "$TEXTS10" \
@@ -71,7 +72,8 @@ for HALFTONE in "${HALFTONE_FLAGS[@]}"; do
                     -v 6 \
                     -b "$BLOCK" \
                     -d "$DROP_RATIO" \
-                    --wo-halftone
+                    --wo-halftone \
+                    --edge-enhance
             fi
 
             # Construct output file name
@@ -88,7 +90,8 @@ for HALFTONE in "${HALFTONE_FLAGS[@]}"; do
                     -v 6 \
                     -b "$BLOCK" \
                     -d "$DROP_RATIO" \
-                    --color
+                    --color \
+                    --edge-enhance
             else
                 python main.py \
                     -t "$TEXTS10" \
@@ -98,7 +101,8 @@ for HALFTONE in "${HALFTONE_FLAGS[@]}"; do
                     -b "$BLOCK" \
                     -d "$DROP_RATIO" \
                     --wo-halftone \
-                    --color
+                    --color \
+                    --edge-enhance
             fi
         done
     done
