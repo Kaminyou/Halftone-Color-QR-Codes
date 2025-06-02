@@ -1,12 +1,12 @@
-# NTU-DIP-Final-2025-Spring
-DIP Final Project
+# Halftone-Color-QR-Codes
+DIP 2025 Final Project
 
-## Usage
+## Usage Examples
 ```sh
 # gray example
 $ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/gray_dog.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 3
 # color example
-$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/gray_dog.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 5 --color
+$ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/color_hokkaido.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 5 --color
 ```
 
 ## Details
