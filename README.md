@@ -4,7 +4,7 @@
 ![linting workflow](https://github.com/Kaminyou/Halftone-Color-QR-Codes/actions/workflows/main.yml/badge.svg)
 
 # Halftone-Color-QR-Codes
-DIP 2025 Final Project
+DIP 2025 Final Project. This project is an extension of the [`Halftone QR codes`](https://dl.acm.org/doi/abs/10.1145/2508363.2508408?casa_token=qEK6M8ONCBgAAAAA:_kX5-qfsL0PlUF43oS5tABcnE2dwqLaF8w2_sQAzXx_M4__73qmvk9WaAv7BPZZoZkGEhzHpKlQWvg).
 
 ## Install
 ```sh
@@ -73,4 +73,19 @@ Arguments:
     --pad-size (int): 
         Padding (in pixels) to apply around the final output QR code.
         Default: 5
+```
+
+## Acknowledgement
+This project is an extension of the `Halftone QR codes`.
+```
+@article{chu2013halftone,
+  title={Halftone QR codes},
+  author={Chu, Hung-Kuo and Chang, Chia-Sheng and Lee, Ruen-Rone and Mitra, Niloy J},
+  journal={ACM transactions on graphics (TOG)},
+  volume={32},
+  number={6},
+  pages={1--8},
+  year={2013},
+  publisher={ACM New York, NY, USA}
+}
 ```
