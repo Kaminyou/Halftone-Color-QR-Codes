@@ -1,6 +1,11 @@
 # Halftone-Color-QR-Codes
 DIP 2025 Final Project
 
+## Install
+```sh
+$ pip install -r requirements.txt
+```
+
 ## Usage Examples
 ```sh
 # gray example
