@@ -19,7 +19,17 @@ $ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/gray_dog.png' -o 'o
 $ python main.py -t 'https://www.csie.ntu.edu.tw/' -i 'input/color_hokkaido.png' -o 'output/stylized_qrcode.png' --meta -v 6 -b 5 --color
 ```
 
-## Details
+## Summary
+This project presents a lightweight yet effective method to generate stylized QR codes using traditional image processing techniques, extending the original Halftone QR code concept. Unlike prior deep-learning-based approaches, our method is efficient, supports color images, adjustable box sizes, and edge-aware module dropping to preserve important visual features. The result is visually appealing QR codes that remain highly scannable on common mobile devices. Key contributions include:
+
+* Color support: Stylization is applied independently across RGB channels.
+* Flexible control: Parameters like QR version, box size, and dropout ratio are user-adjustable.
+* Edge-aware stylization: Preserves details in salient image regions.
+* Open-source: Fully implemented in Python with clear CLI interface.
+
+This approach provides a practical solution for integrating QR codes into aesthetic and design-sensitive contexts without sacrificing usability. For more details, please check our [report](report.pdf)
+
+## CLI Details
 ```
 Command-line arguments for the Halftoning QRCode Generator.
 
